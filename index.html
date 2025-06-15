@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cabelo por Marcio | Diagnóstico Facial 3.0</title>
+    <title>Hair by Márcio | Diagnóstico Facial 4.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -21,6 +21,8 @@
             --darker: #0A0B10;
             --light: #F0F4FF;
             --gold: #FFD700;
+            --error: #FF4D4D;
+            --success: #00FF88;
             --tech-gradient: linear-gradient(135deg, #00D1FF 0%, #9C27B0 100%);
             --card-bg: rgba(18, 20, 29, 0.8);
             --neon-shadow: 0 0 15px rgba(0, 209, 255, 0.5);
@@ -104,6 +106,7 @@
             }
         }
 
+        /* ===== SCANNER SECTION ===== */
         .scanner-section {
             position: relative;
             border-radius: 20px;
@@ -156,6 +159,92 @@
             100% { top: 110%; opacity: 0; }
         }
 
+        /* ===== FACE GUIDE & ARROWS ===== */
+        .face-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 380px;
+            border: 2px dashed var(--primary);
+            border-radius: 40%;
+            display: none;
+            z-index: 10;
+            pointer-events: none;
+            box-shadow: inset 0 0 30px var(--primary), 0 0 30px var(--primary);
+            transition: all 0.5s;
+        }
+
+        .face-guide.active {
+            border-color: var(--gold);
+            box-shadow: inset 0 0 40px var(--gold), 0 0 40px var(--gold);
+        }
+
+        .face-guide-arrows {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 12;
+            pointer-events: none;
+        }
+
+        .arrow {
+            position: absolute;
+            color: var(--primary);
+            font-size: 2.5rem;
+            opacity: 0;
+            transition: all 0.3s;
+            text-shadow: 0 0 15px rgba(0, 209, 255, 0.8);
+            font-weight: bold;
+        }
+
+        .arrow.active {
+            opacity: 1;
+            animation: pulseArrow 1s infinite;
+        }
+
+        #arrow-left {
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            animation-name: pulseArrow;
+        }
+
+        #arrow-right {
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            animation-name: pulseArrow;
+        }
+
+        #arrow-up {
+            left: 50%;
+            top: 20px;
+            transform: translateX(-50%);
+            animation-name: pulseArrowVertical;
+        }
+
+        #arrow-down {
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            animation-name: pulseArrowVertical;
+        }
+
+        @keyframes pulseArrow {
+            0%, 100% { transform: translateX(0) translateY(-50%); }
+            50% { transform: translateX(8px) translateY(-50%); }
+        }
+
+        @keyframes pulseArrowVertical {
+            0%, 100% { transform: translateY(0) translateX(-50%); }
+            50% { transform: translateY(8px) translateX(-50%); }
+        }
+
+        /* ===== BUTTONS ===== */
         #startButton {
             position: absolute;
             top: 50%;
@@ -207,27 +296,7 @@
             100% { transform: translateX(100%) rotate(30deg); }
         }
 
-        .face-guide {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 280px;
-            height: 380px;
-            border: 2px dashed var(--primary);
-            border-radius: 40%;
-            display: none;
-            z-index: 10;
-            pointer-events: none;
-            box-shadow: inset 0 0 30px var(--primary), 0 0 30px var(--primary);
-            animation: pulse 2s infinite alternate;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-
+        /* ===== STATUS & PROGRESS ===== */
         .status {
             position: absolute;
             bottom: 2rem;
@@ -235,17 +304,37 @@
             transform: translateX(-50%);
             color: var(--light);
             font-family: var(--font-tech);
-            font-size: 1rem;
+            font-size: 1.2rem;
             z-index: 50;
-            background: var(--card-bg);
+            background: rgba(10, 11, 16, 0.9);
             padding: 1rem 2rem;
             border-radius: 50px;
             display: none;
             text-align: center;
-            box-shadow: var(--neon-shadow);
+            box-shadow: 0 0 20px rgba(0, 209, 255, 0.5);
             border: 1px solid var(--primary);
             backdrop-filter: blur(5px);
             letter-spacing: 1px;
+            min-width: 300px;
+            transition: all 0.3s;
+        }
+
+        .status.scanning {
+            background: rgba(0, 209, 255, 0.15);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .status.error {
+            background: rgba(255, 50, 50, 0.15);
+            color: var(--error);
+            border-color: var(--error);
+        }
+
+        .status.success {
+            background: rgba(0, 255, 100, 0.15);
+            color: var(--success);
+            border-color: var(--success);
         }
 
         .progress-container {
@@ -253,25 +342,50 @@
             bottom: 5rem;
             left: 50%;
             transform: translateX(-50%);
-            width: 70%;
-            max-width: 400px;
-            height: 8px;
+            width: 80%;
+            max-width: 450px;
+            height: 10px;
             background: rgba(100, 150, 200, 0.1);
-            border-radius: 4px;
+            border-radius: 5px;
             overflow: hidden;
             display: none;
             z-index: 50;
-            box-shadow: inset 0 0 10px rgba(0, 50, 100, 0.3);
+            box-shadow: inset 0 0 10px rgba(0, 50, 100, 0.3),
+                        0 0 10px rgba(0, 209, 255, 0.3);
         }
 
         .progress-bar {
             height: 100%;
             width: 0%;
-            background: var(--tech-gradient);
-            transition: width 0.5s ease;
-            box-shadow: 0 0 10px var(--primary);
+            transition: width 0.3s ease, background 0.5s ease;
+            background: linear-gradient(90deg, #00D1FF, #9C27B0);
+            box-shadow: 0 0 15px rgba(0, 209, 255, 0.7);
+            position: relative;
+            overflow: hidden;
         }
 
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: progressShine 2s infinite linear;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* ===== RESULT CONTAINER ===== */
         #resultContainer {
             position: absolute;
             width: 100%;
@@ -330,6 +444,7 @@
             box-shadow: 0 0 20px rgba(0, 209, 255, 0.7);
         }
 
+        /* ===== ANALYSIS SECTION ===== */
         .analysis-section {
             display: flex;
             flex-direction: column;
@@ -389,36 +504,18 @@
             font-weight: 500;
         }
 
-        .landmark-info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.8rem;
-            margin-top: 1.2rem;
-        }
-
-        .landmark-item {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            font-size: 0.85rem;
+        .face-shape-display {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 1rem 0;
+            padding: 1rem;
             background: rgba(0, 209, 255, 0.1);
-            padding: 0.6rem 0.8rem;
             border-radius: 8px;
-            border: 1px solid rgba(0, 209, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .landmark-item:hover {
-            background: rgba(0, 209, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .landmark-color {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            box-shadow: 0 0 8px currentColor;
+            text-align: center;
+            border: 1px solid var(--primary);
+            font-family: var(--font-tech);
+            letter-spacing: 1px;
         }
 
         .measurement-item {
@@ -432,20 +529,6 @@
         .measurement-value {
             font-weight: 500;
             color: var(--gold);
-            font-family: var(--font-tech);
-            letter-spacing: 1px;
-        }
-
-        .face-shape-display {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--primary);
-            margin: 1rem 0;
-            padding: 1rem;
-            background: rgba(0, 209, 255, 0.1);
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid var(--primary);
             font-family: var(--font-tech);
             letter-spacing: 1px;
         }
@@ -481,6 +564,7 @@
             transform: translateX(3px);
         }
 
+        /* ===== SHARE BUTTONS ===== */
         .share-buttons {
             display: flex;
             justify-content: center;
@@ -533,6 +617,7 @@
         .facebook { background: #3b5998; }
         .link { background: var(--primary); }
 
+        /* ===== LOADING & ANIMATIONS ===== */
         .loading {
             display: inline-block;
             width: 20px;
@@ -548,14 +633,6 @@
             to { transform: rotate(360deg); }
         }
 
-        .instructions {
-            text-align: center;
-            color: var(--primary);
-            font-size: 0.85rem;
-            margin-top: 1rem;
-            font-weight: 300;
-        }
-
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -567,6 +644,7 @@
             }
         }
 
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             header h1 {
                 font-size: 1.8rem;
@@ -584,6 +662,16 @@
             .card h2 {
                 font-size: 1.1rem;
             }
+
+            .face-guide {
+                width: 220px;
+                height: 300px;
+            }
+
+            .status {
+                font-size: 1rem;
+                min-width: 250px;
+            }
         }
     </style>
 </head>
@@ -592,7 +680,7 @@
 
     <header>
         <h1>HAIR BY MARCIO</h1>
-        <p>DIAGNÓSTICO FACIAL 3.0 | TECNOLOGIA DE PONTA</p>
+        <p>DIAGNÓSTICO FACIAL 4.0 | TECNOLOGIA DE PONTA</p>
     </header>
 
     <div class="container">
@@ -605,6 +693,12 @@
                 <div id="scanOverlay"></div>
                 <div id="scanLine"></div>
                 <div class="face-guide"></div>
+                <div class="face-guide-arrows">
+                    <div class="arrow" id="arrow-left">←</div>
+                    <div class="arrow" id="arrow-right">→</div>
+                    <div class="arrow" id="arrow-up">↑</div>
+                    <div class="arrow" id="arrow-down">↓</div>
+                </div>
                 <div class="status" id="status">SISTEMA PRONTO</div>
                 <div class="progress-container">
                     <div class="progress-bar" id="progressBar"></div>
@@ -684,6 +778,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script>
+        // Configuração do Particles.js
         particlesJS("particles-js", {
             "particles": {
                 "number": {
@@ -776,6 +871,7 @@
             "retina_detect": true
         });
 
+        // Elementos do DOM
         const elements = {
             video: document.getElementById('webcam'),
             canvas: document.getElementById('canvas'),
@@ -795,8 +891,13 @@
             exploreCutsBtn: document.getElementById('exploreCutsButton')
         };
 
+        // Configurações
         const config = {
-            scanSpeed: 0.7,
+            scanSpeed: 1.5,
+            scanPenalty: 0.7,
+            alignmentThreshold: 0.15,
+            minFaceSize: 0.2,
+            maxFaceSize: 0.4,
             connections: [
                 [10, 338], [338, 297], [297, 332], [332, 284], [284, 251], [251, 389], [389, 356],
                 [356, 454], [454, 323], [323, 361], [361, 288], [288, 397], [397, 365], [365, 379],
@@ -811,11 +912,12 @@
             lineStyle: {
                 active: 'rgba(0, 209, 255, 0.9)',
                 static: 'rgba(0, 240, 255, 0.8)',
-                width: 1.3,
-                pointSize: 2.2
+                width: 1.5,
+                pointSize: 2.5
             }
         };
 
+        // Estado da aplicação
         let state = {
             scanning: false,
             progress: 0,
@@ -823,10 +925,12 @@
             lastLandmarks: null,
             currentResultImage: null,
             measurementBuffer: [],
-            bufferSize: 10,
-            faceShape: null
+            bufferSize: 8,
+            faceShape: null,
+            alignmentCount: 0
         };
 
+        // Inicializa o Face Mesh
         const faceMesh = new FaceMesh({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
         });
@@ -840,6 +944,7 @@
 
         faceMesh.onResults(processResults);
 
+        // Animação inicial
         document.addEventListener('DOMContentLoaded', () => {
             gsap.to("#analysis-card", {
                 duration: 0.8,
@@ -871,13 +976,16 @@
             });
         });
 
+        // Event Listeners
         elements.startBtn.addEventListener('click', initScanner);
         elements.retryBtn.addEventListener('click', initScanner);
         elements.exploreCutsBtn.addEventListener('click', () => {
             window.location.href = `haircuts.html?shape=${state.faceShape}`;
         });
 
+        // Função para iniciar o scanner
         function initScanner() {
+            // Reset do estado
             state = {
                 scanning: true,
                 progress: 0,
@@ -885,15 +993,18 @@
                 lastLandmarks: null,
                 currentResultImage: null,
                 measurementBuffer: [],
-                faceShape: null
+                faceShape: null,
+                alignmentCount: 0
             };
 
+            // Configura dimensões do canvas
             const scannerRect = document.getElementById('scannerContainer').getBoundingClientRect();
             elements.canvas.width = scannerRect.width;
             elements.canvas.height = scannerRect.height;
             elements.staticCanvas.width = scannerRect.width;
             elements.staticCanvas.height = scannerRect.height;
 
+            // Ativa elementos visuais
             elements.startBtn.style.display = 'none';
             elements.video.style.display = 'block';
             elements.canvas.style.display = 'block';
@@ -905,6 +1016,7 @@
             elements.resultContainer.style.display = 'none';
             elements.resultContainer.classList.remove('active');
 
+            // Reseta textos
             document.getElementById('face-shape-text').textContent = "ANALISANDO FORMATO DO ROSTO...";
             document.getElementById('face-shape-loading').style.display = 'inline-block';
             document.getElementById('hairstyle-suggestion').textContent = "AGUARDANDO ANÁLISE FACIAL...";
@@ -917,16 +1029,20 @@
             document.getElementById('face-height').textContent = "--";
             document.getElementById('face-ratio').textContent = "--";
 
+            // Inicia a câmera
             new Camera(elements.video, {
                 onFrame: async () => await faceMesh.send({ image: elements.video }),
                 width: 1280,
                 height: 720
             }).start();
 
-            elements.status.textContent = "POSICIONE SEU ROSTO NA ÁREA DE SCAN";
+            // Configura mensagem inicial
+            elements.status.textContent = "POSICIONE SEU ROSTO NO GUIA";
+            elements.status.className = "status";
             elements.progressBar.style.width = '0%';
-            elements.progressBar.style.background = 'linear-gradient(90deg, #00D1FF, #9C27B0)';
+            updateProgressBarColor();
 
+            // Animação de entrada
             gsap.from("#scannerContainer", {
                 duration: 0.8,
                 scale: 0.95,
@@ -936,131 +1052,235 @@
             });
         }
 
+        // Processa os resultados do Face Mesh
         function processResults(results) {
-            if (!state.scanning) return;
+    if (!state.scanning) return;
 
-            elements.ctx.save();
-            elements.ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
-            elements.ctx.drawImage(results.image, 0, 0, elements.canvas.width, elements.canvas.height);
+    elements.ctx.save();
+    elements.ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+    
+    try {
+        elements.ctx.drawImage(results.image, 0, 0, elements.canvas.width, elements.canvas.height);
 
-            if (results.multiFaceLandmarks?.length > 0) {
-                const landmarks = results.multiFaceLandmarks[0];
-                const alignmentFeedback = checkFaceAlignment(landmarks);
+        if (results.multiFaceLandmarks?.length > 0) {
+            const landmarks = results.multiFaceLandmarks[0];
+            const alignmentFeedback = checkFaceAlignment(landmarks);
 
-                if (alignmentFeedback.isAligned) {
-                    state.lastLandmarks = landmarks;
+            if (alignmentFeedback.isAligned) {
+                state.lastLandmarks = landmarks;
 
-                    if (!state.faceDetected) {
-                        state.faceDetected = true;
-                        elements.status.textContent = "ANALISANDO DADOS BIOMOÉTRICOS";
+                if (!state.faceDetected) {
+                    state.faceDetected = true;
+                    elements.status.textContent = "ANALISANDO DADOS BIOMÉTRICOS";
+                    elements.status.className = "status scanning";
 
-                        gsap.to(elements.faceGuide, {
-                            duration: 0.5,
-                            scale: 1.05,
-                            repeat: 1,
-                            yoyo: true,
-                            ease: "power1.inOut"
-                        });
-                    }
+                    gsap.to(elements.faceGuide, {
+                        duration: 0.5,
+                        scale: 1.05,
+                        repeat: 1,
+                        yoyo: true,
+                        ease: "power1.inOut"
+                    });
+                }
 
-                    if (state.progress < 100) {
-                        state.progress += config.scanSpeed;
-                        elements.progressBar.style.width = state.progress + '%';
-                        drawFaceLines(results.multiFaceLandmarks, elements.ctx, true);
-                        updateFaceAnalysis(landmarks);
-                    } else {
-                        completeScan();
-                    }
-                } else {
-                    state.faceDetected = false;
-                    state.progress = Math.max(0, state.progress - 1);
-                    elements.progressBar.style.width = state.progress + '%';
-                    elements.status.textContent = alignmentFeedback.message;
-                    drawAlignmentGuides(elements.ctx, alignmentFeedback);
+                drawFaceLines([landmarks], elements.ctx, true);
+                updateFaceAnalysis(landmarks);
+
+                if (state.progress >= 100) {
+                    completeScan();
                 }
             } else {
                 state.faceDetected = false;
-                state.progress = Math.max(0, state.progress - 1);
-                elements.progressBar.style.width = state.progress + '%';
-                elements.status.textContent = "CENTRALIZE SEU ROSTO NA ÁREA DE SCAN";
+                if (alignmentFeedback.feedback) {
+                    drawAlignmentGuides(elements.ctx, alignmentFeedback);
+                }
             }
-
-            elements.ctx.restore();
+        } else {
+            state.faceDetected = false;
+            state.progress = Math.max(0, state.progress - config.scanPenalty);
+            elements.progressBar.style.width = state.progress + '%';
+            elements.status.textContent = "CENTRALIZE SEU ROSTO NO GUIA";
+            elements.status.className = "status error";
         }
+    } catch (error) {
+        console.error("Error processing results:", error);
+    } finally {
+        elements.ctx.restore();
+    }
+}
 
+        // Verifica o alinhamento do rosto
         function checkFaceAlignment(landmarks) {
-            const leftEye = landmarks[33];
-            const rightEye = landmarks[263];
-            const noseTip = landmarks[1];
-            const canvasCenterX = elements.canvas.width / 2;
-            const canvasCenterY = elements.canvas.height / 2;
-            const faceGuideWidth = 280;
-            const faceGuideHeight = 380;
-
-            const faceCenterX = (leftEye.x + rightEye.x) / 2 * elements.canvas.width;
-            const faceCenterY = (leftEye.y + rightEye.y) / 2 * elements.canvas.height;
-            const offsetX = faceCenterX - canvasCenterX;
-            const offsetY = faceCenterY - canvasCenterY;
-
-            const eyeDy = rightEye.y - leftEye.y;
-            const eyeDx = rightEye.x - leftEye.x;
-            const rollAngle = Math.atan2(eyeDy, eyeDx) * 180 / Math.PI;
-
-            const eyeDistance = distanceBetween(leftEye, rightEye) * elements.canvas.width;
-            const idealEyeDistance = faceGuideWidth * 0.3;
-
-            let message = "POSICIONE SEU ROSTO NA ÁREA DE SCAN";
-            let isAligned = true;
-            const feedback = { offsetX, offsetY, rollAngle };
-
-            if (Math.abs(offsetX) > faceGuideWidth * 0.1) {
-                message = offsetX > 0 ? "MOVA O ROSTO PARA A ESQUERDA" : "MOVA O ROSTO PARA A DIREITA";
-                isAligned = false;
-            } else if (Math.abs(offsetY) > faceGuideHeight * 0.1) {
-                message = offsetY > 0 ? "MOVA O ROSTO PARA CIMA" : "MOVA O ROSTO PARA BAIXO";
-                isAligned = false;
-            } else if (Math.abs(rollAngle) > 3) {
-                message = rollAngle > 0 ? "INCLINE A CABEÇA PARA A ESQUERDA" : "INCLINE A CABEÇA PARA A DIREITA";
-                isAligned = false;
-            } else if (eyeDistance < idealEyeDistance * 0.8 || eyeDistance > idealEyeDistance * 1.2) {
-                message = eyeDistance < idealEyeDistance ? "APROXIME-SE DA CÂMERA" : "AFASTE-SE DA CÂMERA";
-                isAligned = false;
+    const leftEye = landmarks[33];
+    const rightEye = landmarks[263];
+    
+    const canvasCenterX = elements.canvas.width / 2;
+    const canvasCenterY = elements.canvas.height / 2;
+    
+    // Posições normalizadas
+    const faceCenterX = ((leftEye.x + rightEye.x) / 2) * elements.canvas.width;
+    const faceCenterY = ((leftEye.y + rightEye.y) / 2) * elements.canvas.height;
+    
+    // Elementos das setas
+    const arrows = {
+        left: document.getElementById('arrow-left'),
+        right: document.getElementById('arrow-right'),
+        up: document.getElementById('arrow-up'),
+        down: document.getElementById('arrow-down')
+    };
+    
+    // Reset arrows
+    Object.values(arrows).forEach(arrow => arrow.classList.remove('active'));
+    
+    // Calcula offsets
+    const offsetX = faceCenterX - canvasCenterX;
+    const offsetY = faceCenterY - canvasCenterY;
+    
+    // Verifica alinhamento
+    let isAligned = true;
+    let message = "POSICIONE SEU ROSTO NO GUIA";
+    let feedbackType = "normal";
+    
+    // Limiares dinâmicos
+    const centerThreshold = elements.canvas.width * config.alignmentThreshold;
+    const minEyeDistance = elements.canvas.width * config.minFaceSize;
+    const maxEyeDistance = elements.canvas.width * config.maxFaceSize;
+    
+    // Distância entre os olhos
+    const eyeDistance = distanceBetween(leftEye, rightEye) * elements.canvas.width;
+    
+    // Verifica posição horizontal
+    if (faceCenterX < canvasCenterX - centerThreshold) {
+        arrows.right.classList.add('active');
+        message = "MOVA PARA A ESQUERDA →";
+        isAligned = false;
+        feedbackType = "error";
+    } 
+    else if (faceCenterX > canvasCenterX + centerThreshold) {
+        arrows.left.classList.add('active');
+        message = "← MOVA PARA A DIREITA";
+        isAligned = false;
+        feedbackType = "error";
+    }
+    
+    // Verifica posição vertical
+    if (faceCenterY < canvasCenterY - centerThreshold) {
+        arrows.down.classList.add('active');
+        message = "MOVA PARA CIMA ↓";
+        isAligned = false;
+        feedbackType = "error";
+    } 
+    else if (faceCenterY > canvasCenterY + centerThreshold) {
+        arrows.up.classList.add('active');
+        message = "↑ MOVA PARA BAIXO";
+        isAligned = false;
+        feedbackType = "error";
+    }
+    
+    // Verifica distância (zoom)
+    if (eyeDistance < minEyeDistance) {
+        message = "APROXIME-SE DA CÂMERA 🔍";
+        isAligned = false;
+        feedbackType = "error";
+    } 
+    else if (eyeDistance > maxEyeDistance) {
+        message = "AFASTE-SE DA CÂMERA 📷";
+        isAligned = false;
+        feedbackType = "error";
+    }
+    
+    // Verifica inclinação
+    const angle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * 180 / Math.PI;
+    if (Math.abs(angle) > 8) {
+        message = angle > 0 ? "INCLINE PARA A DIREITA ↗" : "INCLINE PARA A ESQUERDA ↖";
+        isAligned = false;
+        feedbackType = "error";
+    }
+    
+    // Atualiza feedback visual
+    elements.status.textContent = message;
+    elements.status.className = "status " + feedbackType;
+    
+    // Atualiza guia facial
+    const faceGuide = document.querySelector('.face-guide');
+    if (isAligned) {
+        faceGuide.classList.add('active');
+        state.alignmentCount++;
+        
+        // Aumenta progresso quando alinhado
+        if (state.progress < 100) {
+            const progressIncrement = config.scanSpeed * (1 + state.alignmentCount / 50);
+            state.progress = Math.min(100, state.progress + progressIncrement);
+            elements.progressBar.style.width = state.progress + '%';
+            
+            // Atualiza mensagem durante o scan
+            if (state.progress < 100) {
+                elements.status.textContent = `ANALISANDO... ${Math.floor(state.progress)}%`;
+                elements.status.className = "status scanning";
             }
-
-            return { isAligned, message, feedback };
+        }
+    } else {
+        faceGuide.classList.remove('active');
+        state.alignmentCount = 0;
+        
+        // Reduz progresso se desalinhado
+        state.progress = Math.max(0, state.progress - config.scanPenalty);
+        elements.progressBar.style.width = state.progress + '%';
+    }
+    
+    // Atualiza cor da barra de progresso
+    updateProgressBarColor();
+    
+    return { 
+        isAligned, 
+        message,
+        feedback: { offsetX, offsetY } // Garante que o feedback sempre terá esses valores
+    };
+}
+        // Calcula a distância entre dois pontos
+        function distanceBetween(pointA, pointB) {
+            return Math.sqrt(Math.pow(pointB.x - pointA.x, 2) + Math.pow(pointB.y - pointA.y, 2));
+        }   
+        // Atualiza a cor da barra de progresso
+        function updateProgressBarColor() {
+            const progress = state.progress;
+            let color;
+            
+            if (progress < 30) {
+                color = `linear-gradient(90deg, #ff5e5e ${progress}%, #ff1e1e 100%)`;
+            } else if (progress < 70) {
+                color = `linear-gradient(90deg, #ffbb00 ${progress}%, #ff9500 100%)`;
+            } else {
+                color = `linear-gradient(90deg, #00D1FF 0%, #00ff88 ${progress}%)`;
+            }
+            
+            elements.progressBar.style.background = color;
         }
 
-        function drawAlignmentGuides(ctx, alignmentFeedback) {
-            const { offsetX, offsetY, rollAngle } = alignmentFeedback.feedback;
+       // FUNÇÃO DRAWALIGNMENTGUIDES - Versão Premium
+        function drawAlignmentGuides(ctx, feedback) {
+            const { offsetX, offsetY } = feedback;
             const canvasCenterX = elements.canvas.width / 2;
             const canvasCenterY = elements.canvas.height / 2;
 
-            ctx.strokeStyle = 'rgba(255, 50, 50, 0.8)';
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
             ctx.lineWidth = 2;
 
-            if (Math.abs(offsetX) > 50) {
-                ctx.beginPath();
-                ctx.moveTo(canvasCenterX + (offsetX > 0 ? -50 : 50), canvasCenterY);
-                ctx.lineTo(canvasCenterX + (offsetX > 0 ? -30 : 30), canvasCenterY - 10);
-                ctx.lineTo(canvasCenterX + (offsetX > 0 ? -30 : 30), canvasCenterY + 10);
-                ctx.closePath();
-                ctx.stroke();
-                ctx.fillStyle = 'rgba(255, 50, 50, 0.5)';
-                ctx.fill();
-            }
+            // Desenha linhas de alinhamento
+            ctx.beginPath();
+            ctx.moveTo(canvasCenterX, canvasCenterY);
+            ctx.lineTo(canvasCenterX + offsetX, canvasCenterY + offsetY);
+            ctx.stroke();
 
-            if (Math.abs(offsetY) > 50) {
-                ctx.beginPath();
-                ctx.moveTo(canvasCenterX, canvasCenterY + (offsetY > 0 ? -50 : 50));
-                ctx.lineTo(canvasCenterX - 10, canvasCenterY + (offsetY > 0 ? -30 : 30));
-                ctx.lineTo(canvasCenterX + 10, canvasCenterY + (offsetY > 0 ? -30 : 30));
-                ctx.closePath();
-                ctx.stroke();
-                ctx.fillStyle = 'rgba(255, 50, 50, 0.5)';
-                ctx.fill();
-            }
+            // Desenha círculo de alinhamento
+            ctx.beginPath();
+            ctx.arc(canvasCenterX + offsetX, canvasCenterY + offsetY, 20, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.restore();
         }
-
+        // Desenha os traços do rosto
         function drawFaceLines(landmarks, ctx, isActive = false) {
             const style = config.lineStyle;
 
@@ -1093,6 +1313,7 @@
             });
         }
 
+        // Atualiza a análise facial
         function updateFaceAnalysis(landmarks) {
             if (!landmarks) return;
 
@@ -1118,6 +1339,7 @@
             generateRecommendations(faceShape, averagedMeasurements);
         }
 
+        // Calcula a média das medições
         function averageMeasurements(buffer) {
             if (buffer.length === 0) return {};
             const keys = Object.keys(buffer[0]);
@@ -1133,6 +1355,7 @@
             }, {});
         }
 
+        // Obtém as medidas faciais
         function getFacialMeasurements(landmarks) {
             const foreheadPointsLeft = [234, 227];
             const foreheadPointsRight = [454, 447];
@@ -1148,13 +1371,13 @@
             const canvasWidth = elements.canvas.width;
             const canvasHeight = elements.canvas.height;
             const pupilDistance = distanceBetween(leftEye, rightEye) * canvasWidth;
-            const referenceDistance = 6.3;
+            const referenceDistance = 6.3; // Distância média entre pupilas em cm
             const scaleFactor = referenceDistance / pupilDistance;
 
             const toCm = (distance) => distance * canvasWidth * scaleFactor;
 
             const foreheadWidth = averageDistance(foreheadPointsLeft, foreheadPointsRight, landmarks);
-            const cheekWidth = averageDistance(che.ekPointsLeft, cheekPointsRight, landmarks);
+            const cheekWidth = averageDistance(cheekPointsLeft, cheekPointsRight, landmarks);
             const jawWidth = averageDistance(jawPointsLeft, jawPointsRight, landmarks);
             const faceHeight = toCm(distanceBetween(hairline, chin)) * (canvasHeight / canvasWidth);
 
@@ -1173,6 +1396,7 @@
             };
         }
 
+        // Calcula a distância média entre pontos
         function averageDistance(leftIndices, rightIndices, landmarks) {
             const distances = [];
             leftIndices.forEach(leftIdx => {
@@ -1185,6 +1409,7 @@
             return avgDist * elements.canvas.width * (6.3 / (distanceBetween(landmarks[33], landmarks[263]) * elements.canvas.width));
         }
 
+        // Calcula a distância entre dois pontos
         function distanceBetween(point1, point2) {
             if (!point1 || !point2) return 0;
             const dx = point1.x - point2.x;
@@ -1192,34 +1417,41 @@
             return Math.sqrt(dx * dx + dy * dy);
         }
 
+        // Determina o formato do rosto (versão simplificada)
         function determineFaceShape(measurements) {
-            const {
-                foreheadWidth,
-                cheekWidth,
-                jawWidth,
-                faceHeight,
-                foreheadToCheekRatio,
-                jawToCheekRatio,
-                faceRatio
-            } = measurements;
-
-            const avgWidth = (foreheadWidth + cheekWidth + jawWidth) / 3;
-            const heightToWidthRatio = faceHeight / avgWidth;
-
-            if (heightToWidthRatio > 1.4 && heightToWidthRatio < 1.6 && foreheadToCheekRatio < 0.98 && jawToCheekRatio < 0.98) {
+            const { foreheadWidth, cheekWidth, jawWidth, faceHeight } = measurements;
+            
+            // Calcula proporções chave
+            const faceRatio = faceHeight / cheekWidth;
+            const foreheadToJawRatio = foreheadWidth / jawWidth;
+            const cheekToJawRatio = cheekWidth / jawWidth;
+            
+            // 1. Oval - Altura maior que largura, maxilar mais estreito que testa
+            if (faceRatio > 1.4 && jawWidth < foreheadWidth && cheekToJawRatio > 1.1) {
                 return "OVAL";
-            } else if (heightToWidthRatio <= 1.15 && Math.abs(foreheadWidth - cheekWidth) < 1.0 && Math.abs(jawWidth - cheekWidth) < 1.0) {
+            } 
+            // 2. Redondo - Altura e largura similares
+            else if (faceRatio <= 1.1 && Math.abs(foreheadWidth - jawWidth) < 1.5) {
                 return "REDONDO";
-            } else if (heightToWidthRatio >= 1.6 && Math.abs(foreheadWidth - jawWidth) < 1.0 && Math.abs(cheekWidth - jawWidth) < 1.0) {
-                return "RETANGULAR";
-            } else if (heightToWidthRatio >= 1.15 && heightToWidthRatio < 1.4 && Math.abs(foreheadWidth - jawWidth) < 1.0 && Math.abs(cheekWidth - jawWidth) < 1.0) {
+            } 
+            // 3. Quadrado - Altura e largura similares, maxilar angular
+            else if (Math.abs(foreheadWidth - jawWidth) < 1.0 && Math.abs(cheekWidth - jawWidth) < 1.0) {
                 return "QUADRADO";
-            } else if (foreheadWidth > jawWidth + 1.0 && cheekWidth > jawWidth + 0.8 && foreheadToCheekRatio > 0.95 && jawToCheekRatio < 0.95) {
+            } 
+            // 4. Retangular - Altura significativamente maior que largura
+            else if (faceRatio > 1.5 && foreheadToJawRatio > 0.9 && foreheadToJawRatio < 1.1) {
+                return "RETANGULAR";
+            } 
+            // 5. Coração - Testa mais larga que maxilar
+            else if (foreheadWidth > jawWidth + 2.0 && cheekWidth > jawWidth + 1.5) {
                 return "CORAÇÃO";
             }
+            
+            // Padrão
             return "OVAL";
         }
 
+        // Gera recomendações personalizadas
         function generateRecommendations(faceShape, measurements) {
             let hairstyleSuggestion = "";
             let avoidSuggestion = "";
@@ -1232,43 +1464,46 @@
 
             switch (faceShape) {
                 case "REDONDO":
-                    hairstyleSuggestion = "Opte por um **Undercut com volume** ou **Fade com topete**. Esses cortes adicionam altura, alongando visualmente o rosto.";
-                    avoidSuggestion = "Evite **franja reta pesada** ou **cortes bowl**, que acentuam a redondeza.";
-                    productSuggestion = "Use a **Pomada Matte da Redken Brews** para textura e fixação no topo.";
-                    productLink = "https://www.redken.com.br/produtos/styling/pomada-matte";
+                    hairstyleSuggestion = "Cortes que adicionam altura: Undercut, Fade com topete ou cortes assimétricos.";
+                    avoidSuggestion = "Evite franjas retas ou cortes muito arredondados.";
+                    productSuggestion = "Pomada matte para volume e textura.";
+                    productLink = "#pomada-matte";
                     break;
-                case "QUADRADO":
-                    hairstyleSuggestion = "Experimente um **Corte texturizado com franja lateral** ou **Pompadour suave**. Eles suavizam os ângulos do maxilar.";
-                    avoidSuggestion = "Evite **cortes militares retos** ou **buzz cuts**, que destacam a angularidade.";
-                    productSuggestion = "A **Cera Modeladora da L'Oréal Professionnel Tecni.Art** dá brilho e controle.";
-                    productLink = "https://www.lorealprofessionnel.com.br/produtos/tecniart/cera";
-                    break;
-                case "CORAÇÃO":
-                    hairstyleSuggestion = "Escolha um **Corte médio com ondas** ou **Side Part com volume**. Eles equilibram a testa larga e o queixo estreito.";
-                    avoidSuggestion = "Evite **cortes muito curtos no topo** ou **topetes altos**, que acentuam o queixo.";
-                    productSuggestion = "O **Mousse Volumizing da Schwarzkopf** adiciona corpo às laterais.";
-                    productLink = "https://www.schwarzkopf.com/products/styling/mousse";
-                    break;
+                    
                 case "OVAL":
-                    hairstyleSuggestion = "Você tem versatilidade! Tente um **Undercut moderno**, **Side Part clássico** ou **Texturizado com franja**. Todos valorizam suas proporções.";
-                    avoidSuggestion = "Evite **franjas muito longas** que escondem o rosto ou **cortes muito volumosos**.";
-                    productSuggestion = "A **Argila Modeladora da American Crew** permite diversos estilos com fixação média.";
-                    productLink = "https://www.americancrew.com.br/products/argila";
+                    hairstyleSuggestion = "Quase todos os estilos ficam bem! Experimente Side Part, Crop Top ou Texturizado.";
+                    avoidSuggestion = "Evite cobrir muito a testa com franjas.";
+                    productSuggestion = "Cera modeladora para versatilidade.";
+                    productLink = "#cera-modeladora";
                     break;
+                    
+                case "QUADRADO":
+                    hairstyleSuggestion = "Cortes que suavizam os ângulos: Texturizado, Pompadour ou com franja lateral.";
+                    avoidSuggestion = "Evite cortes retos ou muito curtos que destacam o maxilar.";
+                    productSuggestion = "Argila para definição sem rigidez.";
+                    productLink = "#argila-modeladora";
+                    break;
+                    
                 case "RETANGULAR":
-                    hairstyleSuggestion = isLongFace
-                        ? "Prefira um **Corte com franja lateral** ou **Texturizado com volume nas laterais** para encurtar o rosto."
-                        : "Um **Corte médio com camadas** ou **Franja assimétrica** equilibra o comprimento.";
-                    avoidSuggestion = "Evite **cortes muito altos no topo** ou **laterais muito raspadas**, que alongam ainda mais.";
-                    productSuggestion = "Use o **Gel Fixador da Paul Mitchell** para definição e controle.";
-                    productLink = "https://www.paulmitchell.com.br/products/styling/gel";
+                    hairstyleSuggestion = "Cortes que encurtam visualmente o rosto: Com franja, texturizado ou com volume nas laterais.";
+                    avoidSuggestion = "Evite cortes muito altos no topo ou laterais muito raspadas.";
+                    productSuggestion = "Mousse para volume controlado.";
+                    productLink = "#mousse-volume";
                     break;
+                    
+                case "CORAÇÃO":
+                    hairstyleSuggestion = "Cortes que equilibram testa e queixo: Médio com camadas, Side Swept ou Undercut suave.";
+                    avoidSuggestion = "Evite topetes altos ou cortes muito curtos no topo.";
+                    productSuggestion = "Spray de fixação leve para modelar.";
+                    productLink = "#spray-fixacao";
+                    break;
+                    
                 default:
-                    hairstyleSuggestion = "Estilo personalizado baseado nas suas medidas faciais únicas.";
-                    productSuggestion = "Produtos personalizados para suas necessidades específicas.";
-                    hairstyleLink = "haircuts.html?shape=OVAL";
+                    hairstyleSuggestion = "Estilo personalizado baseado nas suas medidas faciais.";
+                    productSuggestion = "Produtos adequados ao seu tipo de rosto.";
             }
 
+            // Atualiza a interface
             document.getElementById('hairstyle-suggestion').textContent = hairstyleSuggestion;
             document.getElementById('avoid-suggestion').textContent = avoidSuggestion;
             document.getElementById('hairstyle-link').href = hairstyleLink;
@@ -1276,13 +1511,16 @@
             document.getElementById('product-link').href = productLink;
         }
 
+        // Completa o scan e mostra resultados
         function completeScan() {
             state.scanning = false;
 
+            // Para a câmera
             if (elements.video.srcObject) {
                 elements.video.srcObject.getTracks().forEach(track => track.stop());
             }
 
+            // Salva a imagem estática
             elements.staticCtx.clearRect(0, 0, elements.staticCanvas.width, elements.staticCanvas.height);
             elements.staticCtx.drawImage(elements.canvas, 0, 0, elements.staticCanvas.width, elements.staticCanvas.height);
 
@@ -1290,6 +1528,7 @@
                 drawFaceLines([state.lastLandmarks], elements.staticCtx, false);
             }
 
+            // Atualiza a interface
             elements.video.style.display = 'none';
             elements.canvas.style.display = 'none';
             elements.scanLine.style.display = 'none';
@@ -1298,8 +1537,10 @@
 
             elements.staticCanvas.style.display = 'block';
             elements.status.textContent = "DIAGNÓSTICO COMPLETO!";
+            elements.status.className = "status success";
             elements.progressBar.style.background = "var(--gold)";
 
+            // Mostra o resultado
             elements.resultContainer.style.display = 'flex';
             setTimeout(() => {
                 elements.resultContainer.classList.add('active');
@@ -1319,14 +1560,17 @@
                 });
             }, 100);
 
+            // Atualiza a análise final
             if (state.lastLandmarks) {
                 updateFaceAnalysis(state.lastLandmarks);
             }
 
+            // Captura a imagem do resultado
             captureResultImage();
             setupShareButtons();
         }
 
+        // Captura a imagem do resultado para compartilhamento
         function captureResultImage() {
             html2canvas(document.getElementById('scannerContainer'), {
                 backgroundColor: null,
@@ -1338,6 +1582,7 @@
             });
         }
 
+        // Configura os botões de compartilhamento
         function setupShareButtons() {
             if (!setupShareButtons.initialized) {
                 document.getElementById('share-whatsapp').addEventListener('click', () => {
