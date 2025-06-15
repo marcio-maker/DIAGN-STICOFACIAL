@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCANNER FACIAL BIOMÉTRICO | TECNOLOGIA AVANÇADA</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --azul-tech: rgba(0, 180, 255, 0.9);
+            --azul-brilho: rgba(0, 220, 255, 0.7);
+            --azul-neon: 0 0 20px rgba(0, 200, 255, 0.8);
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+        
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* === ELEMENTOS DO SCAN === */
+        #webcam, #canvas, #staticCanvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        
+        #staticCanvas {
+            z-index: 20;
+            pointer-events: none;
+        }
+        
+        #scanOverlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0, 20, 40, 0.9) 0%, rgba(0, 5, 15, 0.95) 100%);
+            display: none;
+            z-index: 5;
+        }
+        
+        #scanLine {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--azul-tech), transparent);
+            box-shadow: var(--azul-neon);
+            top: 0;
+            left: 0;
+            z-index: 15;
+            animation: scan 3s linear infinite;
+            display: none;
+        }
+        
+        @keyframes scan {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 110%; opacity: 0; }
+        }
+        
+        /* === BOTÃO INICIAR === */
+        #startButton {
+            padding: 20px 40px;
+            font-size: 22px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #0066ff, #00aaff);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(0, 150, 255, 0.6);
+            transition: all 0.4s;
+            z-index: 100;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #startButton:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(0, 180, 255, 0.9);
+        }
+        
+        #startButton::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right, 
+                transparent 45%, 
+                rgba(255, 255, 255, 0.3) 50%, 
+                transparent 55%
+            );
+            transform: rotate(30deg);
+            animation: brilho 3s infinite linear;
+        }
+        
+        @keyframes brilho {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+        
+        /* === GUIAS VISUAIS === */
+        .face-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 380px;
+            border: 2px dashed var(--azul-tech);
+            border-radius: 40%;
+            display: none;
+            z-index: 10;
+            pointer-events: none;
+            box-shadow: inset 0 0 20px var(--azul-tech);
+        }
+        
+        .status {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--azul-brilho);
+            font-size: 18px;
+            z-index: 50;
+            background: rgba(0, 30, 60, 0.7);
+            padding: 15px 30px;
+            border-radius: 30px;
+            display: none;
+            text-align: center;
+            box-shadow: var(--azul-neon);
+            border: 1px solid var(--azul-tech);
+            backdrop-filter: blur(5px);
+        }
+        
+        .progress-container {
+            position: absolute;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70%;
+            max-width: 400px;
+            height: 8px;
+            background: rgba(100, 150, 200, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            display: none;
+            z-index: 50;
+            box-shadow: inset 0 0 10px rgba(0, 50, 100, 0.5);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0066ff, #00aaff);
+            transition: width 0.5s ease-out;
+            box-shadow: 0 0 10px rgba(0, 150, 255, 0.7);
+        }
+        
+        /* === MÁSCARA FINAL === */
+        #resultContainer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 25;
+            background: rgba(0, 5, 15, 0.9);
+        }
+        
+        #resultMessage {
+            color: #00ffcc;
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 30px;
+            text-shadow: 0 0 15px rgba(0, 255, 200, 0.8);
+            background: rgba(0, 30, 50, 0.6);
+            padding: 20px 40px;
+            border-radius: 10px;
+            border: 1px solid #00ffcc;
+            box-shadow: 0 0 30px rgba(0, 200, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <!-- Interface Principal -->
+        <button id="startButton">INICIAR SCAN 3D</button>
+        
+        <!-- Elementos do Scanner -->
+        <video id="webcam" playsinline></video>
+        <canvas id="canvas"></canvas>
+        <canvas id="staticCanvas"></canvas>
+        <div id="scanOverlay"></div>
+        <div id="scanLine"></div>
+        <div class="face-guide"></div>
+        
+        <!-- Feedback Visual -->
+        <div class="status" id="status">SISTEMA PRONTO</div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <!-- Resultado Final -->
+        <div id="resultContainer">
+            <div id="resultMessage">MAPEAMENTO FACIAL COMPLETO</div>
+        </div>
+    </div>
+
+    <script>
+        // ===== ELEMENTOS =====
+        const elements = {
+            video: document.getElementById('webcam'),
+            canvas: document.getElementById('canvas'),
+            staticCanvas: document.getElementById('staticCanvas'),
+            staticCtx: document.getElementById('staticCanvas').getContext('2d'),
+            ctx: document.getElementById('canvas').getContext('2d'),
+            startBtn: document.getElementById('startButton'),
+            scanLine: document.getElementById('scanLine'),
+            overlay: document.getElementById('scanOverlay'),
+            faceGuide: document.querySelector('.face-guide'),
+            status: document.getElementById('status'),
+            progressBar: document.getElementById('progressBar'),
+            progressContainer: document.querySelector('.progress-container'),
+            resultContainer: document.getElementById('resultContainer'),
+            resultMessage: document.getElementById('resultMessage')
+        };
+
+        // ===== CONFIGURAÇÕES =====
+        const config = {
+            scanSpeed: 0.7,
+            connections: [
+                // Contorno facial completo
+                [10, 338], [338, 297], [297, 332], [332, 284], [284, 251], [251, 389], [389, 356],
+                [356, 454], [454, 323], [323, 361], [361, 288], [288, 397], [397, 365], [365, 379],
+                [379, 378], [378, 400], [400, 377], [377, 152], [152, 148], [148, 176], [176, 149],
+                [149, 150], [150, 136], [136, 172], [172, 58], [58, 132], [132, 93], [93, 234],
+                [234, 127], [127, 162], [162, 21], [21, 54], [54, 103], [103, 67], [67, 109], [109, 10],
+                
+                // Detalhamento extra (como na imagem de referência)
+                [168, 6], [6, 197], [197, 195], [195, 5], [5, 4], [4, 45], [45, 220], [220, 115],
+                [78, 95], [95, 88], [88, 178], [178, 87], [87, 14], [14, 317], [317, 402], [402, 318],
+                [33, 246], [246, 161], [161, 160], [160, 159], [159, 158], [158, 157], [157, 173],
+                [362, 398], [398, 384], [384, 385], [385, 386], [386, 387], [387, 388], [388, 466]
+            ],
+            lineStyle: {
+                active: 'rgba(0, 220, 255, 0.9)',
+                static: 'rgba(0, 240, 255, 0.8)',
+                width: 1.3,
+                pointSize: 2.2
+            }
+        };
+
+        // ===== VARIÁVEIS =====
+        let state = {
+            scanning: false,
+            progress: 0,
+            faceDetected: false,
+            lastLandmarks: null
+        };
+
+        // ===== FACE MESH =====
+        const faceMesh = new FaceMesh({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+        });
+
+        faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.75,
+            minTrackingConfidence: 0.75
+        });
+
+        faceMesh.onResults(processResults);
+
+        // ===== FUNÇÕES PRINCIPAIS =====
+        function initScanner() {
+            // Resetar estado
+            state = {
+                scanning: true,
+                progress: 0,
+                faceDetected: false,
+                lastLandmarks: null
+            };
+
+            // Mostrar elementos do scanner
+            elements.startBtn.style.display = 'none';
+            elements.video.style.display = 'block';
+            elements.canvas.style.display = 'block';
+            elements.overlay.style.display = 'block';
+            elements.scanLine.style.display = 'block';
+            elements.faceGuide.style.display = 'block';
+            elements.status.style.display = 'block';
+            elements.progressContainer.style.display = 'block';
+            elements.resultContainer.style.display = 'none';
+
+            // Iniciar câmera
+            new Camera(elements.video, {
+                onFrame: async () => await faceMesh.send({image: elements.video}),
+                width: 1280,
+                height: 720
+            }).start();
+
+            // Atualizar status
+            elements.status.textContent = "POSICIONE SEU ROSTO";
+            elements.progressBar.style.width = '0%';
+            elements.progressBar.style.background = 'linear-gradient(90deg, #0066ff, #00aaff)';
+        }
+
+        function processResults(results) {
+            if (!state.scanning) return;
+
+            elements.ctx.save();
+            elements.ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+            elements.ctx.drawImage(results.image, 0, 0, elements.canvas.width, elements.canvas.height);
+
+            if (results.multiFaceLandmarks?.length > 0) {
+                state.lastLandmarks = results.multiFaceLandmarks[0];
+                
+                if (!state.faceDetected) {
+                    state.faceDetected = true;
+                    elements.status.textContent = "ANALISANDO DADOS BIOMÉTRICOS";
+                }
+
+                // Atualizar progresso
+                if (state.progress < 100) {
+                    state.progress += config.scanSpeed;
+                    elements.progressBar.style.width = state.progress + '%';
+                    drawFaceLines(results.multiFaceLandmarks, elements.ctx, true);
+                } else {
+                    completeScan();
+                }
+            } else {
+                state.faceDetected = false;
+                state.progress = Math.max(0, state.progress - 1);
+                elements.progressBar.style.width = state.progress + '%';
+                elements.status.textContent = "CENTRALIZE SEU ROSTO";
+            }
+
+            elements.ctx.restore();
+        }
+
+        function drawFaceLines(landmarks, ctx, isActive = false) {
+            const style = config.lineStyle;
+            
+            ctx.strokeStyle = isActive ? style.active : style.static;
+            ctx.lineWidth = style.width;
+            ctx.globalCompositeOperation = 'lighter';
+            
+            // Desenhar conexões
+            ctx.beginPath();
+            config.connections.forEach(([startIdx, endIdx]) => {
+                const start = landmarks[0][startIdx];
+                const end = landmarks[0][endIdx];
+                if (start && end) {
+                    ctx.moveTo(start.x * elements.canvas.width, start.y * elements.canvas.height);
+                    ctx.lineTo(end.x * elements.canvas.width, end.y * elements.canvas.height);
+                }
+            });
+            ctx.stroke();
+            
+            // Desenhar pontos
+            ctx.fillStyle = style.active;
+            landmarks[0].forEach((point, i) => {
+                if (i % 5 === 0) {
+                    ctx.beginPath();
+                    ctx.arc(
+                        point.x * elements.canvas.width,
+                        point.y * elements.canvas.height,
+                        style.pointSize, 0, Math.PI * 2
+                    );
+                    ctx.fill();
+                }
+            });
+        }
+
+        function createStaticMask() {
+            if (!state.lastLandmarks) return;
+            
+            // Configurar canvas estático
+            elements.staticCanvas.width = elements.canvas.width;
+            elements.staticCanvas.height = elements.canvas.height;
+            elements.staticCtx.clearRect(0, 0, elements.staticCanvas.width, elements.staticCanvas.height);
+            
+            // Desenhar máscara estática
+            drawFaceLines([state.lastLandmarks], elements.staticCtx, false);
+            
+            // Adicionar efeito de brilho
+            const gradient = elements.staticCtx.createRadialGradient(
+                elements.staticCanvas.width/2, elements.staticCanvas.height/2, 0,
+                elements.staticCanvas.width/2, elements.staticCanvas.height/2, 
+                Math.max(elements.staticCanvas.width, elements.staticCanvas.height)/1.5
+            );
+            gradient.addColorStop(0, 'rgba(0, 100, 150, 0.4)');
+            gradient.addColorStop(1, 'rgba(0, 0, 30, 0)');
+            
+            elements.staticCtx.fillStyle = gradient;
+            elements.staticCtx.fillRect(0, 0, elements.staticCanvas.width, elements.staticCanvas.height);
+        }
+
+        function completeScan() {
+            state.scanning = false;
+            
+            // Criar máscara estática
+            createStaticMask();
+            
+            // Atualizar UI
+            elements.scanLine.style.display = 'none';
+            elements.faceGuide.style.display = 'none';
+            elements.progressContainer.style.display = 'none';
+            elements.status.style.display = 'none';
+            elements.resultContainer.style.display = 'flex';
+            elements.staticCanvas.style.display = 'block';
+            elements.progressBar.style.background = '#00ff88';
+            
+            // Resetar após 5 segundos
+            setTimeout(resetScanner, 5000);
+        }
+
+        function resetScanner() {
+            elements.staticCanvas.style.display = 'none';
+            elements.overlay.style.display = 'none';
+            elements.startBtn.style.display = 'block';
+            elements.resultContainer.style.display = 'none';
+        }
+
+        // ===== INICIAR =====
+        elements.startBtn.addEventListener('click', initScanner);
+
+        // Ajustar tamanho do canvas
+        function resizeCanvas() {
+            elements.canvas.width = elements.video.videoWidth;
+            elements.canvas.height = elements.video.videoHeight;
+        }
+        
+        elements.video.addEventListener('loadedmetadata', resizeCanvas);
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+</html>
